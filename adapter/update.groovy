@@ -41,8 +41,47 @@ def generatePackage(file, pkg) {
   def writer = new FileWriter(file)
   au.com.bytecode.opencsv.CSVWriter csv_writer = new au.com.bytecode.opencsv.CSVWriter(writer)
 
+  String header = [
+    'publication_title',
+    'print_identifier',
+    'online_identifier',
+    'date_first_issue_online',
+    'num_first_vol_online',
+    'num_first_issue_online',
+    'date_last_issue_online',
+    'num_last_vol_online',
+    'num_last_issue_online',
+    'title_url',
+    'first_author',
+    'title_id',
+    'embargo_info',
+    'coverage_depth',
+    'coverage_notes',
+    'publisher_name' ]
+
+
+
   pkg.metadata.gokb.package.TIPPs.TIPP.each { tipp ->
-    String[] values = [ tipp.title.name.text(), 'a', 'b', 'c' ]
+    def pissn_node = tipp.title.identifiers.identifier.find{ it.'@namespace' == 'issn' }
+    def eissn_node = tipp.title.identifiers.identifier.find{ it.'@namespace' == 'eissn' }
+
+    String[] values = [ tipp.title.name.text(), 
+                        pissn_node?.'@value'.text(), 
+                        eissn_node?.'@value'.text(), 
+                        tipp.title.coverage.'@startDate',
+                        tipp.title.coverage.'@startVolume',
+                        tipp.title.coverage.'@startIssue',
+                        tipp.title.coverage.'@endDate',
+                        tipp.title.coverage.'@endVolume',
+                        tipp.title.coverage.'@endIssue',
+                        null, // title_url
+                        null, // first_author
+                        null, // title_id
+                        null, // embargo
+                        tipp.title.coverage.'@coverageDepth',
+                        tipp.title.coverage.'@coverageNotes',
+                        null // publisher
+                      ]
     csv_writer.writeNext(values)
   }
 
