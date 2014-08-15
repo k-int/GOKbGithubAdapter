@@ -42,7 +42,6 @@ def generatePackage(file, pkg) {
   au.com.bytecode.opencsv.CSVWriter csv_writer = new au.com.bytecode.opencsv.CSVWriter(writer)
 
   pkg.metadata.gokb.package.TIPPs.TIPP.each { tipp ->
-    println("Tipp");
     String[] values = [ tipp.title.name.text(), 'a', 'b', 'c' ]
     csv_writer.writeNext(values)
   }
@@ -78,22 +77,28 @@ OaiClient oaiclient = new OaiClient(host:'https://gokb.k-int.com/gokb/oai/packag
 println("Starting...");
 
 oaiclient.getChangesSince(null, 'gokb') { pkg ->
-  def package_file_name = './checkout/'+pkg.metadata.gokb.package.name.text().trim().replaceAll("\\W+","_");
+  def package_name = pkg.metadata.gokb.package.name.text().trim().replaceAll("\\W+","_");
+  def package_file_name = './checkout/'+package_name
 
-  println("Processing package.... ${package_file_name} name: ${pkg.metadata.gokb.package.name.text()}");
-  // def package_file = new File("./checkout/pkg
-  def package_file = new File (package_file_name)
-  if ( package_file.exists() ) {
-    // regenrate and check in
-    println('update existing file');
-    generatePackage(package_file, pkg)
+  if ( package_name?.length() > 0 ) {
+    println("Processing package.... ${package_file_name} name: ${pkg.metadata.gokb.package.name.text()}");
+    // def package_file = new File("./checkout/pkg
+    def package_file = new File (package_file_name)
+    if ( package_file.exists() ) {
+      // regenrate and check in
+      println('update existing file');
+      generatePackage(package_file, pkg)
+    }
+    else {
+      // genrate, add and check in
+      println('Create new file');
+      package_file.createNewFile()
+      generatePackage(package_file, pkg)
+      // grgit.add(patterns: [package_file_name])
+    }
   }
   else {
-    // genrate, add and check in
-    println('Create new file');
-    package_file.createNewFile()
-    generatePackage(package_file, pkg)
-    // grgit.add(patterns: [package_file_name])
+    println("Empty package name!!!");
   }
 
 }
