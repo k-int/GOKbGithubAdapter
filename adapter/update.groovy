@@ -3,7 +3,7 @@
 // @GrabResolver(name='es', root='https://oss.sonatype.org/content/repositories/releases')
 @GrabResolver(name='kint', root='http://projects.k-int.com/nexus-webapp-1.4.0/content/repositories/releases')
 @Grapes([
-  @Grab(group='net.sf.opencsv', module='opencsv', version='2.0'),
+  @Grab(group='net.sf.opencsv', module='opencsv', version='2.3'),
   @Grab(group='org.apache.httpcomponents', module='httpmime', version='4.1.2'),
   @Grab(group='org.apache.httpcomponents', module='httpclient', version='4.0'),
   @Grab(group='org.codehaus.groovy.modules.http-builder', module='http-builder', version='0.5.0'),
@@ -23,7 +23,7 @@ import java.nio.charset.Charset
 import org.apache.http.*
 import org.apache.http.protocol.*
 import org.apache.log4j.*
-import au.com.bytecode.opencsv.CSVReader
+import au.com.bytecode.opencsv.CSVWriter
 import java.text.SimpleDateFormat
 import com.k_int.goai.*;
 import org.ajoberstar.grgit.*
@@ -36,6 +36,19 @@ if ( ! config.maxtimestamp ) {
   config.maxtimestamp = 0
 }
 
+def generatePackage(file, pkg) {
+  println('generatePackage....');
+  def writer = new FileWriter(file)
+  au.com.bytecode.opencsv.CSVWriter csv_writer = new au.com.bytecode.opencsv.CSVWriter(writer)
+
+  pkg.metadata.gokb.package.TIPPs.TIPP.each { tipp ->
+    println("Tipp");
+    String[] values = [ tipp.title.name.text(), 'a', 'b', 'c' ]
+    csv_writer.writeNext(values)
+  }
+
+  writer.close()
+}
 
 println("git repository:${config.gitrepo}, max timestamp: ${config.maxtimestamp}");
 
@@ -65,9 +78,27 @@ OaiClient oaiclient = new OaiClient(host:'https://gokb.k-int.com/gokb/oai/packag
 println("Starting...");
 
 oaiclient.getChangesSince(null, 'gokb') { pkg ->
-  println("Processing package.... name: ${pkg.metadata.gokb.package.name.text()}");
+  def package_file_name = './checkout/'+pkg.metadata.gokb.package.name.text().trim().replaceAll("\\W+","_");
+
+  println("Processing package.... ${package_file_name} name: ${pkg.metadata.gokb.package.name.text()}");
   // def package_file = new File("./checkout/pkg
+  def package_file = new File (package_file_name)
+  if ( package_file.exists() ) {
+    // regenrate and check in
+    println('update existing file');
+    generatePackage(package_file, pkg)
+  }
+  else {
+    // genrate, add and check in
+    println('Create new file');
+    package_file.createNewFile()
+    generatePackage(package_file, pkg)
+    // grgit.add(patterns: [package_file_name])
+  }
+
 }
+
+// grgit.add(update: true)
 
 println("Done.");
 
