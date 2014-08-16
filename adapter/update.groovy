@@ -66,20 +66,20 @@ def generatePackage(file, pkg) {
     def eissn_node = tipp.title.identifiers.identifier.find{ it.'@namespace' == 'eissn' }
 
     String[] values = [ tipp.title.name.text(), 
-                        pissn_node?.'@value'.text(), 
-                        eissn_node?.'@value'.text(), 
-                        tipp.title.coverage.'@startDate',
-                        tipp.title.coverage.'@startVolume',
-                        tipp.title.coverage.'@startIssue',
-                        tipp.title.coverage.'@endDate',
-                        tipp.title.coverage.'@endVolume',
-                        tipp.title.coverage.'@endIssue',
-                        null, // title_url
+                        pissn_node?.'@value',
+                        eissn_node?.'@value',
+                        tipp.coverage.'@startDate',
+                        tipp.coverage.'@startVolume',
+                        tipp.coverage.'@startIssue',
+                        tipp.coverage.'@endDate',
+                        tipp.coverage.'@endVolume',
+                        tipp.coverage.'@endIssue',
+                        tipp.url.text(), // title_url
                         null, // first_author
                         null, // title_id
                         null, // embargo
-                        tipp.title.coverage.'@coverageDepth',
-                        tipp.title.coverage.'@coverageNotes',
+                        tipp.coverage.'@coverageDepth',
+                        tipp.coverage.'@coverageNotes',
                         null // publisher
                       ]
     csv_writer.writeNext(values)
@@ -115,9 +115,19 @@ else {
 OaiClient oaiclient = new OaiClient(host:'https://gokb.k-int.com/gokb/oai/packages');
 println("Starting...");
 
+// Make subdirs in repository
+def kbart_dir = new File('./checkout/KBART');
+if ( !kbart_dir.exists() ) {
+  kbart_dir.mkdirs();
+  grgit.add(patterns: ['./checkout/KBART'])
+}
+  
+def kbart_dir = new File('./checkout/KBART');
+def kbart_dir = new File('./checkout/KBART');
+
 oaiclient.getChangesSince(null, 'gokb') { pkg ->
   def package_name = pkg.metadata.gokb.package.name.text().trim().replaceAll("\\W+","_");
-  def package_file_name = './checkout/'+package_name
+  def package_file_name = './checkout/KBART/'+package_name
 
   if ( package_name?.length() > 0 ) {
     println("Processing package.... ${package_file_name} name: ${pkg.metadata.gokb.package.name.text()}");
