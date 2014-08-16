@@ -85,7 +85,6 @@ def generatePackage(file, pkg) {
     csv_writer.writeNext(values)
   }
 
-  csv_writer.writeNext((String[])['Dummy Line',''])
   writer.close()
 }
 
