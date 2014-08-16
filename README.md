@@ -2,8 +2,8 @@ GOKbGithubAdapter
 =================
 
 This project is a template / demonstration of the GOKB OAI Interface. It's a stand-alone groovy script which
-collects updates to the GOKb knowledge base (since the last run) and then commit those changes to a separate
-GITHub repository. The idea is to make it easy for publishers to re-consume their own cleaned package lists.
+collects updates to the GOKb knowledge base (since the last run) and then commits those changes to a separate
+GITHub repository (For example https://github.com/k-int/GOKbProjectFiles). The idea is to make it easy for publishers to re-consume their own cleaned package lists.
 
 However, this project is really a template for anyone wanting to pull package (Or title, or org) level updates
 from GOKb. It should be easily modifyable to only select specific publisher information or perform specific package
