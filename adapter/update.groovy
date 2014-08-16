@@ -96,12 +96,12 @@ if ( config.gitrepo == null ) {
 }
 
 
-def checkout_dir = new File('./checkout');
+def checkout_dir = new File('checkout');
 
 def grgit = null
 if ( checkout_dir.exists() ) {
   if ( checkout_dir.isDirectory() ) {
-    grgit = Grgit.open('./checkout')
+    grgit = Grgit.open('checkout')
   }
   else {  
     System.exit(1);
@@ -109,22 +109,21 @@ if ( checkout_dir.exists() ) {
 }
 else {
   // Clone the repository
-  grgit = Grgit.clone(dir: new File('./checkout'), uri: config.gitrepo)
+  grgit = Grgit.clone(dir: checkout_dir, uri: config.gitrepo)
 }
 
 OaiClient oaiclient = new OaiClient(host:'https://gokb.k-int.com/gokb/oai/packages');
 println("Starting...");
 
 // Make subdirs in repository
-def kbart_dir = new File('./checkout/KBART');
+def kbart_dir = new File('checkout/KBART');
 if ( !kbart_dir.exists() ) {
   kbart_dir.mkdirs();
-  grgit.add(patterns: ['./checkout/KBART'])
 }
-  
-def kbart_dir = new File('./checkout/KBART');
-def kbart_dir = new File('./checkout/KBART');
 
+println("Adding KBART directort");
+grgit.add(patterns: ['KBART'])
+  
 oaiclient.getChangesSince(null, 'gokb') { pkg ->
   def package_name = pkg.metadata.gokb.package.name.text().trim().replaceAll("\\W+","_");
   def package_file_name = './checkout/KBART/'+package_name
@@ -143,16 +142,20 @@ oaiclient.getChangesSince(null, 'gokb') { pkg ->
       println('Create new file');
       package_file.createNewFile()
       generatePackage(package_file, pkg)
-      // grgit.add(patterns: [package_file_name])
     }
+    grgit.add(patterns:['KBART/'+package_name]);
   }
   else {
     println("Empty package name!!!");
   }
-
 }
 
-// grgit.add(update: true)
+println("Commit....");
+grgit.commit(message: 'Committed updates.', amend: true)
+
+println("Push...");
+grgit.push(force:true)
+
 
 println("Done.");
 
