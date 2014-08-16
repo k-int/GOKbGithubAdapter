@@ -41,7 +41,7 @@ def generatePackage(file, pkg) {
   def writer = new FileWriter(file)
   au.com.bytecode.opencsv.CSVWriter csv_writer = new au.com.bytecode.opencsv.CSVWriter(writer)
 
-  String header = [
+  String[] header = [
     'publication_title',
     'print_identifier',
     'online_identifier',
@@ -59,7 +59,7 @@ def generatePackage(file, pkg) {
     'coverage_notes',
     'publisher_name' ]
 
-
+  csv_writer.writeNext(header);
 
   pkg.metadata.gokb.package.TIPPs.TIPP.each { tipp ->
     def pissn_node = tipp.title.identifiers.identifier.find{ it.'@namespace' == 'issn' }
@@ -85,6 +85,7 @@ def generatePackage(file, pkg) {
     csv_writer.writeNext(values)
   }
 
+  csv_writer.writeNext((String[])['Dummy Line',''])
   writer.close()
 }
 
@@ -119,11 +120,10 @@ println("Starting...");
 def kbart_dir = new File('checkout/KBART');
 if ( !kbart_dir.exists() ) {
   kbart_dir.mkdirs();
+  println("Adding KBART directort");
+  grgit.add(patterns: ['KBART'])
 }
 
-println("Adding KBART directort");
-grgit.add(patterns: ['KBART'])
-  
 oaiclient.getChangesSince(null, 'gokb') { pkg ->
   def package_name = pkg.metadata.gokb.package.name.text().trim().replaceAll("\\W+","_");
   def package_file_name = './checkout/KBART/'+package_name
@@ -142,8 +142,8 @@ oaiclient.getChangesSince(null, 'gokb') { pkg ->
       println('Create new file');
       package_file.createNewFile()
       generatePackage(package_file, pkg)
+      grgit.add(patterns:['KBART/'+package_name]);
     }
-    grgit.add(patterns:['KBART/'+package_name]);
   }
   else {
     println("Empty package name!!!");
@@ -151,10 +151,12 @@ oaiclient.getChangesSince(null, 'gokb') { pkg ->
 }
 
 println("Commit....");
-grgit.commit(message: 'Committed updates.', amend: true)
+//grgit.add(update:true)
+grgit.commit(message: 'Committed updates.', all:true)
 
 println("Push...");
-grgit.push(force:true)
+grgit.push(all:true)
+// grgit.push(force:true)
 
 
 println("Done.");
